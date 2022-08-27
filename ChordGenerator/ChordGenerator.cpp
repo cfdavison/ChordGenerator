@@ -2,11 +2,11 @@
 //
 
 #include <iostream>
+#include <string>
 #include <vector>
 #include <deque>
 
 using namespace std;
-
 
 enum Note {
     A,
@@ -92,6 +92,64 @@ vector<pair<Note, ChordType>> getChordsInKey(Note key, Mode mode) {
     return chords;
 }
 
+vector<vector<Note>> generateNeck(vector<Note> tuning = { E,A,D,G,B,E }) 
+{
+    //Each string is represented by a vector<Note>
+    vector<vector<Note>> neck;
+
+    for (int s = 0; s < tuning.size(); s++) 
+    {
+        vector<Note> str;
+        for (int f = 0; f < 12; f++) 
+        {
+            Note open = tuning[tuning.size() - s -1];
+            str.push_back(Note((open + f) % 12));
+        }
+        neck.push_back(str);
+    }
+
+    return neck;
+}
+
+string drawNeck(vector<vector<Note>> neck) {
+    const int fret_spacing = 4;
+    const int nut_spacing = 2;
+
+    string nut = "||";
+    string fret = "|";
+    string ret = "";
+
+    for(int s = 0; s < neck.size(); s++) 
+    {
+        string open = note_strings[neck[s][0]];
+        ret.append(open);
+        ret.append(string(nut_spacing - open.size() + 1, ' '));
+        ret.append(nut);
+        for (int f = 1; f < 12; f++)
+        {
+            string note = note_strings[neck[s][f]];
+            ret.append(string(fret_spacing, ' '));
+            ret.append(note);
+            //Strings of size 1 (C) will get 4 spaces, size 2 (C#) will get 3
+            ret.append(string(fret_spacing - note.size() + 1 , ' '));
+            ret.append(fret);
+        }
+        ret.append("\n");
+    }
+
+    //Fret nums
+    ret.append(string(nut_spacing + 1 + nut.size(), ' '));
+    for (int f = 1; f < 12; f++) {
+        string fret_num = "(" + to_string(f) + ")";
+        ret.append(string(fret_spacing - 1, ' '));
+        ret.append(fret_num);
+        ret.append(string(fret_spacing - fret_num.size() + 2 + fret.size(), ' '));
+    }
+    
+
+    return ret;
+}
+
 string to_string(vector<Note> notes) 
 {
     string s = "";
@@ -121,4 +179,7 @@ int main()
     auto chords = getChordsInKey(key, mode);
     cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(notes) << endl;
     cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(chords) << endl;
+    cout << endl;
+    cout << drawNeck(generateNeck());
+
 }
