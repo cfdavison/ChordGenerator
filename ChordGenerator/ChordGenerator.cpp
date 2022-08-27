@@ -85,9 +85,11 @@ vector<pair<Note, ChordType>> getChordsInKey(Note key, Mode mode) {
     vector<pair<Note, ChordType>> chords;
     for (int i = 0; i < chordPattern.size(); i++)
     {
-        pair<Note, ChordType> chord = (notes[i], chords[i]);
+        pair<Note, ChordType> chord = { notes[i], chordPattern[i] };
         chords.push_back(chord);
     }
+
+    return chords;
 }
 
 string to_string(vector<Note> notes) 
@@ -100,12 +102,23 @@ string to_string(vector<Note> notes)
     return s;
 }
 
-
+string to_string(vector<pair<Note, ChordType>> chords) {
+    string s = "";
+    for (int i = 0; i < chords.size(); i++) {
+        s.append(note_strings[static_cast<int>(chords[i].first)]);
+        
+        s.append(chord_type_string[static_cast<int>(chords[i].second)]);
+        s.append(" ");
+    }
+    return s;
+}
 
 int main()
 {
     Note key = GSHARP;
     Mode mode = LOCRIAN;
     auto notes = getNotesInKey(key, mode);
+    auto chords = getChordsInKey(key, mode);
     cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(notes) << endl;
+    cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(chords) << endl;
 }
