@@ -30,7 +30,7 @@ enum Mode {
     PHRYGIAN,   // flat 2, flat 3, flat 6, flat 7
     LYDIAN,     // sharp 4
     MIXOLYDIAN, // flat 7
-    AEOLIAN,    // flat 3, flat 6, flat 7
+    AEOLIAN,    // Natural Minor | flat 3, flat 6, flat 7
     LOCRIAN,    // flat 2, flat 3, flat 5, flat 6, flat 7
     BLUES,      
 };
@@ -60,7 +60,7 @@ vector<T> shiftVector(vector<T> v, int n) {
 vector<Note> getNotesInKey(Note key, Mode mode) 
 {
     vector<int> notePattern = { 2, 2, 1, 2, 2, 2, 1 };
-    if (mode == BLUES) notePattern = { 2, 2, 1, 2, 2, 2, 1 };
+    if (mode == BLUES) notePattern = { 3, 2, 1, 1, 3, 2 };
     else {
         notePattern = shiftVector(notePattern, static_cast<int>(mode));
     }
@@ -77,6 +77,7 @@ vector<Note> getNotesInKey(Note key, Mode mode)
 }
 
 vector<pair<Note, ChordType>> getChordsInKey(Note key, Mode mode) {
+    if (mode == BLUES) mode = AEOLIAN;
     vector<Note> notes = getNotesInKey(key, mode);
     vector<ChordType> chordPattern = { MAJ, MIN, MIN, MAJ, MAJ, MIN, DIM };
     chordPattern = shiftVector(chordPattern, static_cast<int>(mode));
@@ -111,6 +112,7 @@ vector<vector<Note>> generateNeck(vector<Note> tuning = { E,A,D,G,B,E })
     return neck;
 }
 
+
 string drawNeck(vector<vector<Note>> neck) {
     const int fret_spacing = 4;
     const int nut_spacing = 2;
@@ -119,7 +121,7 @@ string drawNeck(vector<vector<Note>> neck) {
     string fret = "|";
     string ret = "";
 
-    for(int s = 0; s < neck.size(); s++) 
+    for (int s = 0; s < neck.size(); s++)
     {
         string open = note_strings[neck[s][0]];
         ret.append(open);
@@ -131,7 +133,7 @@ string drawNeck(vector<vector<Note>> neck) {
             ret.append(string(fret_spacing, ' '));
             ret.append(note);
             //Strings of size 1 (C) will get 4 spaces, size 2 (C#) will get 3
-            ret.append(string(fret_spacing - note.size() + 1 , ' '));
+            ret.append(string(fret_spacing - note.size() + 1, ' '));
             ret.append(fret);
         }
         ret.append("\n");
@@ -145,8 +147,59 @@ string drawNeck(vector<vector<Note>> neck) {
         ret.append(fret_num);
         ret.append(string(fret_spacing - fret_num.size() + 2 + fret.size(), ' '));
     }
-    
 
+
+    return ret;
+}
+
+
+string drawNeck(vector<vector<Note>> neck, Note key, Mode mode = IONIAN, std::vector<int> note_nums = {}) {
+    const int fret_spacing = 4;
+    const int nut_spacing = 2;
+
+    vector<Note> notes = getNotesInKey(key, mode);
+    
+    if (note_nums.size() > 0) {
+        vector<Note> notes_trimmed;
+
+        for (int i : note_nums)
+        {
+            notes_trimmed.push_back(notes[ i - 1]);
+        }
+
+        notes = notes_trimmed;
+    }
+
+    string nut = "||";
+    string fret = "|";
+    string ret = "";
+
+    for (int s = 0; s < neck.size(); s++)
+    {
+        string open = (count(notes.begin(), notes.end(), neck[s][0])) ? note_strings[neck[s][0]] : "X";
+        ret.append(open);
+        ret.append(string(nut_spacing - open.size() + 1, ' '));
+        ret.append(nut);
+        for (int f = 1; f < 12; f++)
+        {
+            string note = (count(notes.begin(), notes.end(), neck[s][f])) ? note_strings[neck[s][f]] : "";
+            ret.append(string(fret_spacing, ' '));
+            ret.append(note);
+            //Strings of size 1 (C) will get 4 spaces, size 2 (C#) will get 3
+            ret.append(string(fret_spacing - note.size() + 1, ' '));
+            ret.append(fret);
+        }
+        ret.append("\n");
+    }
+
+    //Fret nums
+    ret.append(string(nut_spacing + 1 + nut.size(), ' '));
+    for (int f = 1; f < 12; f++) {
+        string fret_num = "(" + to_string(f) + ")";
+        ret.append(string(fret_spacing - 1, ' '));
+        ret.append(fret_num);
+        ret.append(string(fret_spacing - fret_num.size() + 2 + fret.size(), ' '));
+    }
     return ret;
 }
 
@@ -173,13 +226,14 @@ string to_string(vector<pair<Note, ChordType>> chords) {
 
 int main()
 {
-    Note key = GSHARP;
-    Mode mode = LOCRIAN;
+    Note key = A;
+    Mode mode = PHRYGIAN;
+    vector<Note> tuning = { F, A, C, G, B, E };
     auto notes = getNotesInKey(key, mode);
     auto chords = getChordsInKey(key, mode);
     cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(notes) << endl;
     cout << note_strings[key] << " " << mode_strings[mode] << ": " << to_string(chords) << endl;
     cout << endl;
-    cout << drawNeck(generateNeck());
+    cout << drawNeck(generateNeck(tuning), key, mode);
 
 }
